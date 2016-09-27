@@ -1,69 +1,85 @@
 ---
 - hosts: web
+  remote_user: root
+  vars_files:
+  - secret_variables.yml
   vars:
-    db_password: password
-    server_name: curriculum
-    service_name: curriculum
-    service_version: 1.0
-    app_key: QujjaJs3fxwtnTl7FiqhEEn1ACkf7YZW
-    app_env: test
-    db_host: localhost
-    db_database: curriculum
-    db_username: curriculum
-    db_port: 3306
-    service_dir: /usr/share/nginx/{{ service_name }}
+   server_name: curriculum
+   service_name: curriculum
+   service_version: 1.0
+   app_env: test
+   db_host: localhost
+   db_database: curriculum
+   db_username: curriculum
+   db_port: 3306
+   service_dir: /usr/share/nginx/{{ service_name }}
   tasks:
-    - become: yes
-      lineinfile: dest=/etc/sysconfig/selinux regexp="^SELINUX=" line="SELINUX=permissive"
+# --- 0 sets SELinux mode setting to permissive ---
+  - name: Set SELinux policy to Permissive
+    selinux: policy=targeted state=permissive
 
-    - become: yes
-      command: setenforce 0
+  - name: epel-release install
+    yum: name=epel-release update_cache=yes state=present
 
-    - yum: name=epel-release update_cache=yes state=present
+# --- Complete nginx and php required installation ---
+  - name: ngnix installation
+    yum: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
+    register: nginx_install
 
-    - become: yes
-      yum: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
-      register: nginx_install
+# --- download composer file as composer.php with chmod 755 permission ---
+  - name: Donwload composer
+    get_url:
+     url: https://getcomposer.org/installer
+     dest: /tmp/composer.php
+     mode: 0755
 
-    - become: yes
-      shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# --- Install composer.php from tmp ---
+  - name: Install composer
+    command: php composer.php chdir=/tmp
+# --- move install composer.phar file to bin for global access ---
+  - name: Move Composer installation files
+    command: mv /tmp/composer.phar /usr/local/bin
 
-    - become: yes
-      copy: src=web/nginx.conf dest=/etc/nginx/nginx.conf mode=0000
-      register: nginx_conf
+# --- copying configuration files block ----
+  - name: copy ngnix configuration files
+    copy: src=web/nginx.conf dest=/etc/nginx/ mode=0744
+    register: nginx_conf
 
-    - become: yes
-      template: src=web/vhost.conf.j2 dest=/etc/nginx/conf.d/{{ service_name }}.conf mode=0644
-      register: vhost_conf
+  - name: copy host configuration files
+    template: src=web/vhost.conf.j2 dest=/etc/nginx/conf.d/{{ service_name }}.conf mode=0744
+    register: vhost_conf
 
-    - template: src=web/php.ini.j2 dest=/etc/php.ini mode=0644
-      register: php_conf
+  - name: copy php configuration files
+    template: src=web/php.ini.j2 dest=/etc/php.ini mode=0744
+    register: php_conf
 
-    - become: yes
-      copy: src=web/php-fpm-web.conf dest=/etc/php-fpm.d/www.conf mode=0644
-      register: php_fpm_conf
+  - name: copy php-fpm configuration files
+    copy: src=web/php-fpm-web.conf dest=/etc/php-fpm.d/www.conf mode=0744
+    register: php_fpm_conf
+# ------------------------------------------
+  - name: start nginx service
+    service: name=nginx state=restarted enabled=yes
+    when: nginx_install|changed or nginx_conf|changed or vhost_conf|changed
 
-    - become: yes
-      systemd: name=nginx state=restarted enabled=yes
-      when: nginx_install|changed or nginx_conf|changed or vhost_conf|changed
+  - name: start php-fpm service
+    service: name=php-fpm state=restarted enabled=yes
+    when: nginx_install|changed or php_conf|changed or php_fpm_conf|changed
 
-    - systemd: name=php-fpm state=restarted enabled=yes
-      when: nginx_install|changed or php_conf|changed or php_fpm_conf|changed
+  - name: make Curriculum directory
+    file: path={{ service_dir }} state=directory
 
-    - become: yes
-      file: path="{{ service_dir }}" state=file
+  - name: untarzip service files to server
+    unarchive: src=web/{{ service_name }}.tgz dest={{ service_dir }} mode=0755
 
-    - become: yes
-      unarchive: src=web/{{ service_name }}.tgz dest="{{ service_dir }}" mode=0755
+  - name: composer update
+    command: chdir={{ service_dir }} /usr/local/bin/composer.phar update
 
-    - become: yes
-      command: /usr/local/bin/composer update chdir={{ service_dir }}
+# --- give read write execute access to everyone ----
+  - name: chmod 777 storage
+    file: path={{ service_dir }}/storage state=directory mode=0777 recurse=yes
 
-    - become: yes
-      command: chmod -R 0777 storage chdir="{{ service_dir }}"
+  - name: Permission of ngnix files
+    file: path={{ service_dir }} owner=nginx group=nginx state=directory recurse=yes
 
-    - command: chown -R nginx:nginx . chdir="{{ service_dir }}"
-
-    - become: yes
-      template: src=web/env.j2 dest="{{ service_dir }}/.env" mode=0644 owner=nginx
-
+  - name: run template
+    template: src=web/env.j2 dest={{ service_dir }}/.env mode=0744 owner=nginx
