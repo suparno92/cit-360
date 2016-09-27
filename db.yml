@@ -9,7 +9,7 @@
     yum: name=libselinux-python state=present
 
   - name: copy repos
-    copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/ owner=root group=root mode=0744
+    copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/ owner=root group=root mode=0600
 
 # --- Mariadb installation ---
   - name: install maria
@@ -21,7 +21,7 @@
 
 # --- copy mariadb_answers file to the server ---
   - name: copy files
-    template: src=db/mariadb_answers.txt dest=/tmp/ owner=bin group=wheel mode=0644
+    template: src=db/mariadb_answers.txt dest=/tmp/ owner=bin group=wheel mode=0600
 
 # --- Begin secure installation with answer response in mariadb_answers.txt ---
   - name: secure installation
@@ -29,7 +29,7 @@
 
 # --- untarzip db to root folder with chmod 740 permission so that it can be extracted and used ---
   - name: unzip files
-    unarchive: src=db/db.tgz dest=~/ mode=0740
+    unarchive: src=db/db.tgz dest=~/ mode=0000
 
   - name: make database
     command: ./make_databases.sh {{ db_password }} localhost chdir=~/db
