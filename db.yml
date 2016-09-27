@@ -1,22 +1,36 @@
 ---
 - hosts: db
-  vars:
-    db_password: password
+  remote_user: root
+  vars_files:
+  - secret_variables.yml
   tasks:
-    - copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo mode=0644
+# --- required python package for mariadb installation ---
+  - name: install libselinux
+    yum: name=libselinux-python state=present
 
-    - become: yes
-      apt: name=MariaDB-server,MariaDB-client update_cache=yes state=present
+  - name: copy repos
+    copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/ owner=root group=root mode=0744
 
-    - become: yes
-      systemd: name=mariadb state=started enabled=yes
+# --- Mariadb installation ---
+  - name: install maria
+    yum: name=MariaDB-server,MariaDB-client update_cache=yes state=present
 
-    - template: src=db/mariadb_answers.txt dest=/tmp/mariadb_answers.txt mode=0644
+# --- start Mariadb server ---
+  - name: start maria
+    service: name=mysql state=started enabled=yes
 
-    - become: yes
-      shell: /usr/bin/mysql_secure_installation </tmp/mariadb_answers.txt
+# --- copy mariadb_answers file to the server ---
+  - name: copy files
+    template: src=db/mariadb_answers.txt dest=/tmp/ owner=bin group=wheel mode=0644
 
-    - unarchive: src=db/db.tgz dest=~/ mode=0000
+# --- Begin secure installation with answer response in mariadb_answers.txt ---
+  - name: secure installation
+    shell: /usr/bin/mysql_secure_installation < /tmp/mariadb_answers.txt
 
-    - command: ./make_databases.sh {{ db_password }} localhost chdir=~/db
-      ignore_errors: True
+# --- untarzip db to root folder with chmod 740 permission so that it can be extracted and used ---
+  - name: unzip files
+    unarchive: src=db/db.tgz dest=~/ mode=0740
+
+  - name: make database
+    command: ./make_databases.sh {{ db_password }} localhost chdir=~/db
+    ignore_errors: True
