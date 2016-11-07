@@ -161,23 +161,23 @@ resource "aws_route_table_association" "private_subnet_c_rt_assoc" {
 
 # --- launch an Instance on Public Subnet ---- AMI Linux
 resource "aws_security_group" "sg_bastion_server" {
-	name = "bastion_public_server"
-	description = "Allow SSH traffic from the internet"
-
-	ingress {
-		from_port = 22
-		to_port = 22
-		protocol = "tcp"
-		cidr_blocks = ["108.185.241.221/24"]
+   name = "bastion_public_server"
+   description = "Allow SSH traffic from the internet"
+   vpc_id = "${var.vpc_id}"
+	
+   ingress {
+	from_port = 22
+	to_port = 22
+	protocol = "tcp"
+	cidr_blocks = ["108.185.241.221/24"]
 	}
-  egress {
+   egress {
     from_port = 0
     to_port = 0
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-	vpc_id = "${var.vpc_id}"
 }
 
 resource "aws_instance" "bastion_2a_public" {
