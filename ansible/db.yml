@@ -1,36 +1,23 @@
 ---
 - hosts: db
-  remote_user: root
+  remote_user: ec2-user
+  become: yes
+  become_method: sudo
   vars_files:
   - secret_variables.yml
   tasks:
-# --- required python package for mariadb installation ---
-  - name: install libselinux
-    yum: name=libselinux-python state=present
-
   - name: copy repos
     copy: src=db/MariaDB.repo dest=/etc/yum.repos.d/ owner=root group=root mode=0744
 
-# --- Mariadb installation ---
+# --- Mariadb Client local installation ---
   - name: install maria
-    yum: name=MariaDB-server,MariaDB-client update_cache=yes state=present
+    yum: name=MariaDB-client update_cache=yes state=present
 
-# --- start Mariadb server ---
-  - name: start maria
-    service: name=mysql state=started enabled=yes
-
-# --- copy mariadb_answers file to the server ---
-  - name: copy files
-    template: src=db/mariadb_answers.txt dest=/tmp/ owner=bin group=wheel mode=0644
-
-# --- Begin secure installation with answer response in mariadb_answers.txt ---
-  - name: secure installation
-    shell: /usr/bin/mysql_secure_installation < /tmp/mariadb_answers.txt
-
-# --- untarzip db to root folder with chmod 740 permission so that it can be extracted and used ---
+# --- Unzip / Contains new modified .sh file to work with RDS ----
   - name: unzip files
     unarchive: src=db/db.tgz dest=~/ mode=0740
 
+# --- Run modified bash script to create databases on RDS instance ----
   - name: make database
-    command: ./make_databases.sh {{ db_password }} localhost chdir=~/db
+    command: ./make_databases_new.sh {{ db_password }} {{ endpoint }} {{ db_masteruser }} chdir=/home/ec2-user/cit-360/ansible/db/db
     ignore_errors: True
