@@ -1,30 +1,43 @@
 ---
 - hosts: web
-  remote_user: root
+  remote_user: ec2-user
+  become: yes
+  become_method: sudo
   vars_files:
   - secret_variables.yml
   vars:
-   server_name: curriculum
+   ansible_ssh_private_key_file: "~/.ssh/cit360.pem"
    service_name: curriculum
    service_version: 1.0
    app_env: test
-   db_host: localhost
+   db_host: main-database-west.cd93nmwqszs2.us-west-2.rds.amazonaws.com
    db_database: curriculum
    db_username: curriculum
    db_port: 3306
    service_dir: /usr/share/nginx/{{ service_name }}
   tasks:
-# --- 0 sets SELinux mode setting to permissive ---
-  - name: Set SELinux policy to Permissive
-    selinux: policy=targeted state=permissive
-
   - name: epel-release install
     yum: name=epel-release update_cache=yes state=present
 
-# --- Complete nginx and php required installation ---
-  - name: ngnix installation
-    yum: name=nginx,php,php-fpm,php-ldap,php-mbstring,php-mcrypt,php-mysql,php-phpunit-PHPUnit update_cache=yes state=present
+  - name: Install gcc
+    command: yum install -y gcc make
+
+  - name: dependency installation
+    yum: name=pcre-devel.x86_64,zlib-devel.x86_64 update_cache=yes state=present
+
+# --- Complete nginx installation ---
+  - name: nginx installation
+    yum: name=nginx.x86_64 update_cache=yes state=present
     register: nginx_install
+
+# --- Complete php installation ---
+  - name: php installation
+    yum: name=php.x86_64 update_cache=yes state=present
+
+# --- Install php packages  ---
+
+  - name: ngnix installation
+    yum: name=php-fpm.x86_64,php-ldap.x86_64,php-mbstring.x86_64,php-mcrypt.x86_64,php-mysql.x86_64  update_cache=yes state=present
 
 # --- download composer file as composer.php with chmod 755 permission ---
   - name: Donwload composer
