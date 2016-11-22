@@ -1,6 +1,6 @@
 ---
 - hosts: db
-  remote_user: ec2-user
+  remote_user: root
   become: yes
   become_method: sudo
   vars_files:
@@ -13,11 +13,10 @@
   - name: install maria
     yum: name=MariaDB-client update_cache=yes state=present
 
-# --- Unzip / Contains new modified .sh file to work with RDS ----
   - name: unzip files
     unarchive: src=db/db.tgz dest=~/ mode=0740
 
 # --- Run modified bash script to create databases on RDS instance ----
   - name: make database
-    command: ./make_databases_new.sh {{ db_password }} {{ endpoint }} {{ db_masteruser }} chdir=/home/ec2-user/cit-360/ansible/db/db
+    command: ./make_databases_new.sh {{ db_password }} {{ endpoint }} chdir=/home/ec2-user/cit-360/ansible/db/db
     ignore_errors: True
