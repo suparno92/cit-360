@@ -232,10 +232,10 @@ resource "aws_security_group" "sg_db_instance" {
   vpc_id      = "${var.vpc_id}"
 
     ingress {
-      from_port   = 0
-      to_port     = 65535
+      from_port   = 80
+      to_port     = 80
       protocol    = "TCP"
-      cidr_blocks = ["172.31.0.0/16"]
+      cidr_blocks = ["0.0.0.0/0"]
     }
 
     egress {
@@ -314,7 +314,7 @@ resource "aws_instance" "web_s1" {
 	availability_zone    = "us-west-2b"
 	instance_type        = "t2.micro"
 	key_name             = "${var.aws_key_name}"
-  	associate_public_ip_address = false
+  
 	security_groups      = ["${aws_security_group.sg_web_servers.id}"]
 	subnet_id            = "${aws_subnet.private_subnet_b.id}"
   tags {
@@ -327,7 +327,7 @@ resource "aws_instance" "web_s2" {
 	availability_zone    = "us-west-2c"
 	instance_type        = "t2.micro"
 	key_name             = "${var.aws_key_name}"
-  	associate_public_ip_address = false
+  
 	security_groups      = ["${aws_security_group.sg_web_servers.id}"]
 	subnet_id            = "${aws_subnet.private_subnet_c.id}"
   tags {
@@ -340,7 +340,6 @@ resource "aws_instance" "web_s2" {
 # --- Public Elastic Load Balance ----
 resource "aws_elb" "web-elb" {
 
-  subnets            = ["${aws_subnet.public_subnet_b.id}","${aws_subnet.public_subnet_c.id}"]
   security_groups    = ["${aws_security_group.sg_load_balancer.id}"]
 
   listener {
@@ -353,7 +352,7 @@ resource "aws_elb" "web-elb" {
   health_check {
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    timeout             = 5
+    timeout             = 5s
     target              = "HTTP:80/"
     interval            = 30
   }
