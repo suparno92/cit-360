@@ -1,6 +1,7 @@
 
   # --- import secret variables ----
   variable "vpc_id" {}
+  variable "my_publicip" {}
   variable "db_password" {}
   variable "db_username" {}
   variable "aws_access_key" {}
@@ -166,7 +167,7 @@
   		from_port = 22
   		to_port = 22
   		protocol = "tcp"
-  		cidr_blocks = ["108.185.241.221/32"]
+  		cidr_blocks = ["${var.my_publicip}"]
   	}
     ingress {
       from_port   = 0
@@ -190,7 +191,7 @@
   	availability_zone    = "us-west-2a"
   	instance_type        = "t2.micro"
   	key_name             = "${var.aws_key_name}"
-    associate_public_ip_address = true
+        associate_public_ip_address = true
   	security_groups      = ["${aws_security_group.sg_bastion_server.id}"]
   	subnet_id            = "${aws_subnet.public_subnet_a.id}"
 
