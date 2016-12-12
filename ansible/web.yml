@@ -1,6 +1,6 @@
 ---
 - hosts: web
-  remote_user: root
+  remote_user: ec2-user
   become: yes
   become_method: sudo
   vars_files:
@@ -26,17 +26,17 @@
 
 # --- Complete nginx installation ---
   - name: nginx installation
-    yum: name=nginx.x86_64 update_cache=yes state=present
+    yum: name=nginx54.x86_64 update_cache=yes state=present
     register: nginx_install
 
 # --- Complete php installation ---
   - name: php installation
-    yum: name=php.x86_64 update_cache=yes state=present
+    yum: name=php54.x86_64 update_cache=yes state=present
 
 # --- Install php packages  ---
 
   - name: ngnix installation
-    yum: name=php-fpm.x86_64,php-ldap.x86_64,php-mbstring.x86_64,php-mcrypt.x86_64,php-mysql.x86_64  update_cache=yes state=present
+    yum: name=php54-fpm.x86_64,php54-ldap.x86_64,php54-mbstring.x86_64,php54-mcrypt.x86_64,php54-mysql.x86_64  update_cache=yes state=present
 
 # --- download composer file as composer.php with chmod 755 permission ---
   - name: Donwload composer
