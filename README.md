@@ -1,4 +1,6 @@
-AWS Web Hosting Platform Runbook
+AWS Web Hosting Platform Runbook 
+
+Author: Suparno Samanta
 
  Short Description
 
