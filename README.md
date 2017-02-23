@@ -26,7 +26,7 @@ mcrypt.x86_64,php-mysql.x86_64
 
 - Architecture Diagram
 
-![Image13](images/Image13)
+![Alt text](/img/mydiagram1.jpg?raw=true "Optional Title")
 
 - Deployment
 
