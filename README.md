@@ -19,37 +19,28 @@ Author: Suparno Samanta
 
 ![Alt text](/img/mydiagram1.jpg?raw=true "Optional Title")
 
-- DEPLOYEMENT
-
-- Before carrying out the deployment please follow the listed Pre-requisites:
+DEPLOYEMENT
+Before carrying out the deployment please follow the listed Pre-requisites:
 
 - 1)  Centos 7 installed in your computer or VirtualBox
-
 - 2)  Installed Terraform in the Centos 7
-
 - 3)  Installed git
 
-- Part 1) Create AWS Infrastructure
+Part 1) Create AWS Infrastructure
 
 - 1)  Using git clone the cit-360 folder [ *will only need terraform folder for setting up AWS infrastructure]
-
 - 2)  cd into terraform folder and open terraform.tfvars file
+   - a)insert your variables
 
-- a)
+     vpc_id, aws_access_key, aws_secret_key, aws_key_name , aws_key_path [ AWS accountinfo]
 
-insert your variables
+      db_username, db_password [RDS master user/password]
 
-  vpc_id, aws_access_key, aws_secret_key, aws_key_name , aws_key_path [ AWS accountinfo]
-
-  db_username, db_password [RDS master user/password]
-
-- 3)  Open AWS, navigate to EC2. Note the private IP address of webserver-b and webserver-c. Note the
-
-- public IP of remaining instance.
+- 3)  Open AWS, navigate to EC2. Note the private IP address of webserver-b and webserver-c. Note the public IP of remaining instance.
 
 - 4)  Navigate to RDS and note down your endpoint.
 
-- Part 2) Deploy web services and database configurations
+ Part 2) Deploy web services and database configurations
 
 - 1)  ssh into the public ip with the user ec2-user
 
@@ -69,9 +60,7 @@ insert your variables
 
 - a)  ansible-playbook -I hosts.ini db.yml  --ask-vault-pass --extra-vars "db_password=
 
-- b)  ansible-playbook -I hosts.ini web.yml  --ask-vault-pass --extra-vars "db_password=’curriculum user
-
-’database password’"password’
+- b)  ansible-playbook -I hosts.ini web.yml  --ask-vault-pass --extra-vars "db_password=’curriculum user’database password’"password’
 
 "
 
@@ -85,7 +74,7 @@ insert your variables
 
 - 10) Congratulation, now you have your web services perfectly setup inside AWS.
 
-- Issues
+ Issues
 
 - Title: db.yml failed
 
