@@ -1,34 +1,23 @@
 AWS Web Hosting Platform Runbook
 
-- Short Description
+ Short Description
 
-- Setup Amazon AWS Infrastructure using Terraform and use Ansible to setup/configure web servers.
-
+ Setup Amazon AWS Infrastructure using Terraform and use Ansible to setup/configure web servers.
+ 
 - Required Software
-
 - o  Amazon AWS subscription
-
 - o  Amazon EC2 AMI Linux  X3
-
 - o  Amazon RDS MariaDB
-
 - o  Putty [optional]
-
 - o  Terraform
-
 - o  Ansible 2.1
-
 - o  nginx.x86_64
+- o  php54.x86_64,  php-fpm.x86_64, php-ldap.x86_64, php-mbstring.x86_64, php-mcrypt.x86_64,php-mysql.x86_64
 
-- o  php54.x86_64,  php-fpm.x86_64, php-ldap.x86_64, php-mbstring.x86_64, php-
-
-mcrypt.x86_64,php-mysql.x86_64
-
-- Architecture Diagram
 
 ![Alt text](/img/mydiagram1.jpg?raw=true "Optional Title")
 
-- Deployment
+- DEPLOYEMENT
 
 - Before carrying out the deployment please follow the listed Pre-requisites:
 
